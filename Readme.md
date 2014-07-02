@@ -223,3 +223,4 @@ various improvements.  Here is a list of these people.
   * Hideyuki Shirai
   * Masahiro Ishiyama
   * Alexy Khrabrov
+  * Toshio Ito

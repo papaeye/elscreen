@@ -367,6 +367,32 @@ Return the modified ALIST."
       (setq tree (cdr tree)))
     (nconc (nreverse clone) tree)))
 
+(defun elscreen-window-history-supported-p ()
+  (and (fboundp 'window-prev-buffers)
+       (fboundp 'window-next-buffers)
+       (fboundp 'set-window-prev-buffers)
+       (fboundp 'set-window-next-buffers)))
+
+(defun elscreen-get-all-window-history-alist ()
+  (when (elscreen-window-history-supported-p)
+    (mapcar (lambda (window)
+              (let ((prevs (window-prev-buffers window))
+                    (nexts (window-next-buffers window)))
+                (cons window (cons prevs nexts))))
+            (window-list))))
+
+(defun elscreen-restore-all-window-history-alist (history-alist)
+  (when (and history-alist (elscreen-window-history-supported-p))
+    (mapc (lambda (entry)
+            (let* ((window (car entry))
+                   (histories (cdr entry))
+                   (prevs (car histories))
+                   (nexts (cdr histories)))
+              (when (window-valid-p window)
+                (set-window-prev-buffers window prevs)
+                (set-window-next-buffers window nexts))))
+          history-alist)))
+
 (defmacro elscreen-save-screen-excursion (&rest body)
   "Execute BODY, preserving ElScreen meta data.
 Return the value of the last form in BODY."
@@ -374,7 +400,8 @@ Return the value of the last form in BODY."
          (original-buffer-live-p nil)
          (original-elscreen-window-configuration
           (elscreen-current-window-configuration))
-         (original-frame-confs (elscreen-copy-tree elscreen-frame-confs)))
+         (original-frame-confs (elscreen-copy-tree elscreen-frame-confs))
+         (original-window-histories (elscreen-get-all-window-history-alist)))
      (unwind-protect
          (save-window-excursion ,@body)
        (setq elscreen-frame-confs original-frame-confs)
@@ -388,7 +415,8 @@ Return the value of the last form in BODY."
         original-buffer-list)
        (when original-buffer-live-p
          (while (not (memq (car (buffer-list)) original-buffer-list))
-           (bury-buffer (car (buffer-list))))))))
+           (bury-buffer (car (buffer-list)))))
+       (elscreen-restore-all-window-history-alist original-window-histories))))
 
 (defsubst elscreen-get-frame-confs (frame)
   (assoc-default frame elscreen-frame-confs))

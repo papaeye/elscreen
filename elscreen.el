@@ -1591,5 +1591,7 @@ Use \\[toggle-read-only] to permit editing."
     (elscreen-set-prefix-key prefix-key)))
 
 (provide 'elscreen)
-
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
 ;;; elscreen.el ends here

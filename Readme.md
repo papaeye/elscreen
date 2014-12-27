@@ -24,7 +24,7 @@ Installation
 The preferred way to install ElScreen is through
 [MELPA](http://melpa.org) and `package.el`.  If you have Emacs 24,
 you should already have `package.el`.  To enable MELPA, add something
-like the following in your `.emacs.d` file:
+like the following in your `.emacs.d/init.el` file:
 
     (add-to-list 'package-archives
          '("melpa" . "http://melpa.org/packages/") t)

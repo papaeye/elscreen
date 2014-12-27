@@ -45,7 +45,7 @@ Create a new screen and switch to it.
 `C-z C`<br />
 Create a new screen with the window-configuration of
 the current screen.
-           
+
 `C-z k`<br />
 `C-z C-k`<br />
 Kill current screen.
@@ -79,31 +79,31 @@ Jump to the screen number 0-9.
 
 `C-z C-s`<br />
 Swap current screen with previous one.
-  
+
 `C-z w`<br />
 `C-z C-w`<br />
 Show a list of screen.
-  
+
 `C-z A`<br />
 Allow the user to enter a name for the current screen.
 
 `C-z m`<br />
 `C-z C-m`<br />
 Repeat the last message displayed in the mini-buffer.
-  
+
 `C-z t`<br />
 `C-z C-t`<br />
-    
+
 `C-z b`<br />
 Switch to the screen in which specified buffer is
 splayed.
-  
+
 `C-z C-f`<br />
 Create new screen and open file.
-  
+
 `C-z C-r`<br />
 Create new screen and open file but don't allow changes.
-  
+
 `C-z d`<br />
 Create new screen and run dired.
 
@@ -121,7 +121,7 @@ Display ElScreen version.
 
 `C-z ?`<br />
 Show key bindings of ElScreen and Add-On softwares.
-  
+
 
 
 Setup

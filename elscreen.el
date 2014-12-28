@@ -432,15 +432,15 @@ Return the value of the last form in BODY."
                   (elscreen-current-window-configuration)
                 (elscreen-default-window-configuration)))
         (elscreen--set-alist 'elscreen-frame-confs frame
-			     (list
-			      (cons 'screen-property
-				    (list
-				     (cons 0 (list
-					      (cons 'window-configuration
-						    elscreen-window-configuration)))))
-			      (cons 'screen-history (list 0))
-			      (cons 'modified-inquirer nil)
-			      (cons 'screen-to-name-alist-cache nil)))
+                             (list
+                              (cons 'screen-property
+                                    (list
+                                     (cons 0 (list
+                                              (cons 'window-configuration
+                                                    elscreen-window-configuration)))))
+                              (cons 'screen-history (list 0))
+                              (cons 'modified-inquirer nil)
+                              (cons 'screen-to-name-alist-cache nil)))
         (elscreen-apply-window-configuration elscreen-window-configuration)
         (elscreen-notify-screen-modification 'force-immediately)
         (select-frame selected-frame)))))
@@ -882,9 +882,9 @@ If SCREEN is ommitted, current-screen is used."
       (elscreen-message "There is no such screen, cannot clone"))
      ((setq clone (elscreen-create-internal))
       (save-window-excursion
-	(elscreen-goto-internal screen)
-	(setq elscreen-window-configuration
-	      (elscreen-current-window-configuration)))
+        (elscreen-goto-internal screen)
+        (setq elscreen-window-configuration
+              (elscreen-current-window-configuration)))
       (elscreen-set-window-configuration clone elscreen-window-configuration)
       (elscreen-goto clone)))))
 
@@ -1465,8 +1465,8 @@ Use \\[toggle-read-only] to permit editing."
             (screen-to-name-alist (elscreen-get-screen-to-name-alist))
             (current-screen (elscreen-get-current-screen))
             (half-space (propertize
-			 " "
-			 'display '(space :width 0.5)))
+                         " "
+                         'display '(space :width 0.5)))
             (tab-separator (propertize
                             " "
                             'face 'elscreen-tab-background-face

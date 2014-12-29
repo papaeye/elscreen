@@ -352,21 +352,6 @@ Return the modified ALIST."
     (when (marker-buffer marker)
       (goto-char marker))))
 
-(defsubst elscreen-copy-tree (tree)
-  (if (fboundp 'copy-tree)
-      (copy-tree tree)
-    (elscreen-copy-tree-1 tree)))
-
-(defun elscreen-copy-tree-1 (tree)
-  (let (clone)
-    (while (consp tree)
-      (setq clone (cons (or (and (consp (car tree))
-                                 (elscreen-copy-tree-1 (car tree)))
-                            (car tree))
-                        clone))
-      (setq tree (cdr tree)))
-    (nconc (nreverse clone) tree)))
-
 (defun elscreen-window-history-supported-p ()
   (and (fboundp 'window-prev-buffers)
        (fboundp 'window-next-buffers)
@@ -400,7 +385,7 @@ Return the value of the last form in BODY."
          (original-buffer-live-p nil)
          (original-elscreen-window-configuration
           (elscreen-current-window-configuration))
-         (original-frame-confs (elscreen-copy-tree elscreen-frame-confs))
+         (original-frame-confs (copy-tree elscreen-frame-confs))
          (original-window-histories (elscreen-get-all-window-history-alist)))
      (unwind-protect
          (save-window-excursion ,@body)

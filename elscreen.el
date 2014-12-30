@@ -419,7 +419,7 @@ Return the value of the last form in BODY."
        (elscreen-restore-all-window-history-alist original-window-histories))))
 
 (defsubst elscreen-get-frame-confs (frame)
-  (assoc-default frame elscreen-frame-confs))
+  (cdr (assq frame elscreen-frame-confs)))
 
 (defun elscreen-make-frame-confs (frame &optional keep-window-configuration)
   (when (null (elscreen-get-frame-confs frame))
@@ -452,7 +452,7 @@ Return the value of the last form in BODY."
 (add-hook 'delete-frame-functions 'elscreen-delete-frame-confs)
 
 (defsubst elscreen-get-conf-list (type)
-  (assoc-default type (elscreen-get-frame-confs (selected-frame))))
+  (cdr (assq type (elscreen-get-frame-confs (selected-frame)))))
 
 (defsubst elscreen-set-conf-list (type conf-list)
   (let ((frame-conf (elscreen-get-frame-confs (selected-frame))))
@@ -460,7 +460,7 @@ Return the value of the last form in BODY."
 
 (defun elscreen-get-screen-property (screen)
   (let ((screen-property-list (elscreen-get-conf-list 'screen-property)))
-    (assoc-default screen screen-property-list)))
+    (cdr (assq screen screen-property-list))))
 
 (defun elscreen-set-screen-property (screen property)
   (let ((screen-property-list (elscreen-get-conf-list 'screen-property)))
@@ -492,7 +492,7 @@ Return the value of the last form in BODY."
   "Return pair of window-configuration and marker of SCREEN
 from `elscreen-frame-confs', a cons cell."
   (let ((screen-property (elscreen-get-screen-property screen)))
-    (assoc-default 'window-configuration screen-property)))
+    (cdr (assq 'window-configuration screen-property))))
 
 (defun elscreen-set-window-configuration (screen winconf)
   "Set pair of window-configuration and marker of SCREEN to WINCONF."
@@ -503,7 +503,7 @@ from `elscreen-frame-confs', a cons cell."
 (defun elscreen-get-screen-nickname (screen)
   "Return nickname of SCREEN from `elscreen-frame-confs', a string."
   (let ((screen-property (elscreen-get-screen-property screen)))
-    (assoc-default 'nickname screen-property)))
+    (cdr (assq 'nickname screen-property))))
 
 (defun elscreen-set-screen-nickname (screen nickname)
   "Set nickname of SCREEN to NICKNAME."
@@ -1067,7 +1067,7 @@ is ommitted, current screen will survive."
     (elscreen-message
      (mapconcat
       (lambda (screen)
-        (let ((screen-name (assoc-default screen screen-to-name-alist)))
+        (let ((screen-name (cdr (assq screen screen-to-name-alist))))
           (format "%d%s %s" screen
                   (elscreen-status-label screen "")
                   screen-name)))
@@ -1148,7 +1148,7 @@ is ommitted, current screen will survive."
                         (format "  %d%s %s\n" screen
                                 (elscreen-status-label screen)
                                 (elscreen-truncate-screen-name
-                                 (assoc-default screen screen-to-name-alist)
+                                 (cdr (assq screen screen-to-name-alist))
                                  truncate-length)))
                       screen-list nil)))
          (prompt "Select screen or (c)reate, (n)ext, (p)revious, (t)oggle: ")
@@ -1210,8 +1210,8 @@ is ommitted, current screen will survive."
         (kill-buffer candidate-buffer)))
     (cond
      ((string= command-or-target-screen ""))
-     ((assoc-default command-or-target-screen command-list)
-      (funcall (assoc-default command-or-target-screen command-list)))
+     ((cdr (assoc command-or-target-screen command-list))
+      (funcall (cdr (assoc command-or-target-screen command-list))))
      (t
       (elscreen-goto (string-to-number command-or-target-screen))))))
 
@@ -1384,7 +1384,7 @@ Use \\[toggle-read-only] to permit editing."
                      (format "%d%s %s" screen
                              (elscreen-status-label screen)
                              (elscreen-truncate-screen-name
-                              (assoc-default screen screen-to-name-alist) 25))
+                              (cdr (assq screen screen-to-name-alist)) 25))
                      'elscreen-jump
                      :keys (format "%s %d"
                                    (key-description elscreen-prefix-key)
@@ -1524,9 +1524,9 @@ Use \\[toggle-read-only] to permit editing."
                                   half-space
                                   (elscreen-tab-escape-%
                                    (elscreen-truncate-screen-name
-                                    (assoc-default screen screen-to-name-alist)
+                                    (cdr (assq screen screen-to-name-alist))
                                     (elscreen-tab-width) t)))
-                          'help-echo (assoc-default screen screen-to-name-alist)
+                          'help-echo (cdr (assq screen screen-to-name-alist))
                           'local-map (elscreen-tab-create-keymap
                                       'mouse-1 `(lambda (e)
                                                   (interactive "e")

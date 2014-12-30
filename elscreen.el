@@ -326,19 +326,6 @@ return a new alist whose car is the new pair and cdr is ALIST."
       (set symbol nil))
   (set symbol (elscreen--put-alist key value (symbol-value symbol))))
 
-(defun elscreen--del-alist (key alist)
-  "Delete an element whose car equals KEY from ALIST.
-Return the modified ALIST."
-  (let ((pair (assoc key alist)))
-    (if pair
-        (delq pair alist)
-      alist)))
-
-(defun elscreen--remove-alist (symbol key)
-  "Delete an element whose car equals KEY from the alist bound to SYMBOL."
-  (and (boundp symbol)
-       (set symbol (elscreen--del-alist key (symbol-value symbol)))))
-
 ;;; Internal Functions:
 
 (defvar elscreen-frame-confs nil
@@ -446,7 +433,7 @@ Return the value of the last form in BODY."
         (select-frame selected-frame)))))
 
 (defun elscreen-delete-frame-confs (frame)
-  (elscreen--remove-alist 'elscreen-frame-confs frame))
+  (setq elscreen-frame-confs (assq-delete-all frame elscreen-frame-confs)))
 
 (add-hook 'after-make-frame-functions 'elscreen-make-frame-confs)
 (add-hook 'delete-frame-functions 'elscreen-delete-frame-confs)
@@ -469,7 +456,7 @@ Return the value of the last form in BODY."
 
 (defun elscreen-delete-screen-property (screen)
   (let ((screen-property-list (elscreen-get-conf-list 'screen-property)))
-    (elscreen--remove-alist 'screen-property-list screen)
+    (setq screen-property-list (assq-delete-all screen screen-property-list))
     (elscreen-set-conf-list 'screen-property screen-property-list)))
 
 (defun elscreen-get-number-of-screens ()
@@ -514,7 +501,7 @@ from `elscreen-frame-confs', a cons cell."
 (defun elscreen-delete-screen-nickname (screen)
   "Remove nickname of SCREEN from `elscreen-frame-confs'."
   (let ((screen-property (elscreen-get-screen-property screen)))
-    (elscreen--remove-alist 'screen-property 'nickname)
+    (setq screen-property (assq-delete-all 'nickname screen-property))
     (elscreen-set-screen-property screen screen-property)))
 
 (defun elscreen-append-screen-to-history (screen)

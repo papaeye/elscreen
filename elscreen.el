@@ -1,4 +1,4 @@
-;;; elscreen.el --- Emacs window session manager
+;;; elscreen.el --- Emacs window session manager     -*- lexical-binding: t; -*-
 
 ;; Author: Naoto Morishima <naoto@morishima.net>
 ;; Based on: screens.el
@@ -550,7 +550,8 @@ from `elscreen-frame-confs', a cons cell."
 (defun elscreen-screen-modified-p (inquirer)
   (let* ((inquirer-list (elscreen-get-conf-list 'modified-inquirer))
          (modified (null (memq inquirer inquirer-list))))
-    (add-to-list 'inquirer-list inquirer)
+    (when modified
+      (push inquirer inquirer-list))
     (elscreen-set-conf-list 'modified-inquirer inquirer-list)
     modified))
 
@@ -588,7 +589,7 @@ from `elscreen-frame-confs', a cons cell."
          ((string-match "-\\(hooks?\\|functions\\)$"
                         (symbol-name hook-or-function))
           `(add-hook (quote ,hook-or-function)
-                     (lambda (&rest ignore)
+                     (lambda (&rest _)
                        (elscreen-notify-screen-modification ,mode))))
          (t ;; Assume hook-or-function is function
           `(defadvice ,hook-or-function (around
@@ -1143,7 +1144,7 @@ is ommitted, current screen will survive."
                       screen-list nil)))
          (prompt "Select screen or (c)reate, (n)ext, (p)revious, (t)oggle: ")
          (minibuffer-map (copy-keymap minibuffer-local-map))
-         window frame-last-window command-or-target-screen mini-hist)
+         window frame-last-window command-or-target-screen)
     ;; prepare window to show candidates
     (save-window-excursion
       (setq frame-last-window (previous-window (frame-first-window)))
@@ -1195,8 +1196,7 @@ is ommitted, current screen will survive."
       ;; read key from minibuffer
       (unwind-protect
           (setq command-or-target-screen
-                (read-from-minibuffer prompt nil minibuffer-map
-                                      nil 'mini-hist))
+                (read-from-minibuffer prompt nil minibuffer-map))
         (kill-buffer candidate-buffer)))
     (cond
      ((string= command-or-target-screen ""))
@@ -1245,10 +1245,9 @@ Use \\[toggle-read-only] to permit editing."
                  (dired-read-dir-and-switches "in new screen ")))
   (elscreen-find-and-goto-by-buffer (dired-noselect dirname switches) 'create))
 
-(defun elscreen-execute-extended-command (prefix-arg)
+(defun elscreen-execute-extended-command (arg)
   (interactive "P")
-  (let ((prefix-arg prefix-arg)
-        (prefix-key (key-description elscreen-prefix-key))
+  (let ((prefix-key (key-description elscreen-prefix-key))
         target-screen)
     (setq this-command (intern (completing-read
                                 ;; Note: this has the hard-wired
@@ -1258,17 +1257,16 @@ Use \\[toggle-read-only] to permit editing."
                                 ;; whether some other keys were actually bound
                                 ;; to `execute-extended-command' and
                                 ;; `universal-argument'.
-                                (cond ((eq prefix-arg '-)
+                                (cond ((eq arg '-)
                                        (format "- %s M-x " prefix-key))
-                                      ((equal prefix-arg '(4))
+                                      ((equal arg '(4))
                                        (format "C-u %s M-x " prefix-key))
-                                      ((integerp prefix-arg)
+                                      ((integerp arg)
+                                       (format "%d %s M-x " arg prefix-key))
+                                      ((and (consp arg)
+                                            (integerp (car arg)))
                                        (format "%d %s M-x "
-                                               prefix-arg prefix-key))
-                                      ((and (consp prefix-arg)
-                                            (integerp (car prefix-arg)))
-                                       (format "%d %s M-x "
-                                               (car prefix-arg) prefix-key))
+                                               (car arg) prefix-key))
                                       (t
                                        (format "%s M-x " prefix-key)))
                                 obarray 'commandp t nil

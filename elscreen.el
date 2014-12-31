@@ -1,4 +1,4 @@
-;;; elscreen.el --- Emacs window session manager     -*- lexical-binding: t; -*-
+;;; elscreen.el --- Screen Manager for Emacs         -*- lexical-binding: t; -*-
 
 ;; Author: Naoto Morishima <naoto@morishima.net>
 ;; Based on: screens.el

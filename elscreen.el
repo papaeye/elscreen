@@ -1295,7 +1295,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (add-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
 
-;; Menu
+;;;; Menu
 
 (define-key-after (lookup-key global-map [menu-bar]) [elscreen]
   (cons "ElScreen" (make-sparse-keymap "ElScreen")) 'buffer)
@@ -1390,7 +1390,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (add-hook 'elscreen-screen-update-hook 'elscreen-menu-bar-update)
 
-;; Tab
+;;;; Tab
 
 (defvar elscreen-tab-format nil)
 (make-variable-buffer-local 'elscreen-tab-format)

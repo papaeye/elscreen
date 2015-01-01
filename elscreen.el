@@ -165,6 +165,21 @@ nil means don't display tabs."
            (elscreen-tab-update t)))
   :group 'elscreen)
 
+(defcustom elscreen-create-hook nil
+  "Normal hook run at end of creating a screen."
+  :type 'hook
+  :group 'elscreen)
+
+(defcustom elscreen-kill-hook nil
+  "Normal hook run at end of killing a screen."
+  :type 'hook
+  :group 'elscreen)
+
+(defcustom elscreen-goto-hook nil
+  "Normal hook run at end of switching a screen."
+  :type 'hook
+  :group 'elscreen)
+
 (defface elscreen-tab-background-face
   '((((type x w32 mac) (class color))
      :background "Gray50")
@@ -738,7 +753,6 @@ stored as SCREEN."
          (elscreen-get-window-configuration screen)))
     (elscreen-apply-window-configuration elscreen-window-configuration)))
 
-(defvar elscreen-create-hook nil)
 (defun elscreen-create-internal (&optional noerror)
   "Create a new screen.
 If NOERROR is not nil, no message is displayed in mini buffer
@@ -873,7 +887,6 @@ If SCREEN is ommitted, current-screen is used."
       (elscreen-set-window-configuration clone elscreen-window-configuration)
       (elscreen-goto clone)))))
 
-(defvar elscreen-kill-hook nil)
 (defun elscreen-kill (&optional screen)
   "Kill SCREEN.  If optional argument SCREEN is
 ommitted, current-screen is killed."
@@ -948,7 +961,6 @@ is ommitted, current screen will survive."
         (elscreen-message (format "screen %s killed" screen-list-string)))))
     screen-list))
 
-(defvar elscreen-goto-hook nil)
 (defun elscreen-goto (screen)
   "Switch to screen SCREEN."
   (interactive "NGoto screen number: ")

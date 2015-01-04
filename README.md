@@ -166,12 +166,6 @@ that returns nickname, which are listed by
           ("dict" . "OnlineDict")
           ("*WL:Message*" . "Wanderlust"))
 
-    elscreen-startup-command-line-processing
-
-If non `nil`, ElScreen processes command line arguments of Emacsen when
-starting up, and opens files with new screens if needed.  The default
-value is `t`.
-
     elscreen-display-screen-number
 
 If non `nil`, show the number of the current screen in mode line.  The

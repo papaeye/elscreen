@@ -200,16 +200,6 @@
     (should-not (setupp 'delete-frame 'force))
     (should-not (setupp 'Info-find-node-2 'force))))
 
-(ert-deftest elscreen-test-mode-line-setup-and-teardown ()
-  (elscreen-setup)
-  (should
-   (eq (cl-caadr (memq 'mode-line-position mode-line-format))
-       'elscreen-display-screen-number))
-  (elscreen-teardown)
-  (should-not
-   (eq (cl-caadr (memq 'mode-line-position mode-line-format))
-       'elscreen-display-screen-number)))
-
 (ert-deftest elscreen-test-menu-bar-setup-and-teardown ()
   (elscreen-setup)
   (should

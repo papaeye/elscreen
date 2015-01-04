@@ -1574,14 +1574,6 @@ Use \\[toggle-read-only] to permit editing."
 
   (elscreen-set-help 'elscreen-help)
 
-  ;; Setup mode line
-  (let ((point (memq 'mode-line-position mode-line-format)))
-    (unless (eq (car (cadr point)) 'elscreen-display-screen-number)
-      (setcdr point
-              (cons '(elscreen-display-screen-number
-                      (:eval (format " [%d]" (elscreen-get-current-screen))))
-                    (cdr point)))))
-
   ;; Setup menu bar
   (define-key-after (lookup-key global-map [menu-bar]) [elscreen]
     (cons "ElScreen" elscreen-menu-map) 'buffer)
@@ -1619,11 +1611,6 @@ Use \\[toggle-read-only] to permit editing."
   (setq elscreen-help-symbol-list
         (delq 'elscreen-help elscreen-help-symbol-list))
 
-  ;; Clean up mode line
-  (let ((point (memq 'mode-line-position mode-line-format)))
-    (when (eq (car (cadr point)) 'elscreen-display-screen-number)
-      (setcdr point (cddr point))))
-
   (define-key global-map [menu-bar elscreen] nil)
   (define-key minibuffer-local-map [menu-bar elscreen] nil)
 
@@ -1641,6 +1628,8 @@ Use \\[toggle-read-only] to permit editing."
 (define-minor-mode elscreen-mode nil
   :group 'elscreen
   :global t
+  :lighter (elscreen-display-screen-number
+            (:eval (format " [%d]" (elscreen-get-current-screen))))
   :keymap (list (cons elscreen-prefix-key elscreen-map))
   (if elscreen-mode
       (elscreen-setup)

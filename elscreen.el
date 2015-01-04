@@ -30,7 +30,7 @@
 ;; This is a fork of ElScreen designed to be installed with
 ;; package.el.  It does not require APEL (it also probably does not
 ;; work with XEmacs).  In order to start using ElScreen, add
-;; (elscreen-start) to your emacs configuration.  For help on how to
+;; (elscreen-mode) to your emacs configuration.  For help on how to
 ;; use elscreen, try \C-z ?.
 
 ;;; Code:
@@ -262,21 +262,20 @@ nil means don't display tabs."
 (define-key elscreen-map "j"    'elscreen-link)
 (define-key elscreen-map "s"    'elscreen-split)
 
+(defvar elscreen-mode-map)
+
+(defun elscreen-mode-map-disable ()
+  (substitute-key-definition elscreen-map nil elscreen-mode-map))
+
+(defun elscreen-mode-map-enable ()
+  (define-key elscreen-mode-map elscreen-prefix-key elscreen-map))
+
 (defun elscreen-set-prefix-key (prefix-key)
-  (when (not (eq elscreen-prefix-key prefix-key))
-    (when elscreen-prefix-key
-      (global-set-key elscreen-prefix-key
-                      (get 'elscreen-prefix-key
-                           'global-map-original-definition))
-      (define-key minibuffer-local-map elscreen-prefix-key
-        (get 'elscreen-prefix-key 'minibuffer-local-map-original-definition)))
-    (put 'elscreen-prefix-key 'global-map-original-definition
-         (lookup-key global-map prefix-key))
-    (put 'elscreen-prefix-key 'minibuffer-local-map-original-definition
-         (lookup-key minibuffer-local-map prefix-key)))
-  (global-set-key prefix-key elscreen-map)
-  (define-key minibuffer-local-map prefix-key 'undefined)
-  (setq elscreen-prefix-key prefix-key))
+  (unless (equal elscreen-prefix-key prefix-key)
+    (setq elscreen-prefix-key prefix-key)
+    (elscreen-mode-map-disable)
+    (elscreen-mode-map-enable)
+    (elscreen-menu-bar-update 'force)))
 
 (defvar elscreen-help "ElScreen keys:
   \\[elscreen-create]    Create a new screen and switch to it
@@ -432,9 +431,6 @@ Return the value of the last form in BODY."
 (defun elscreen-delete-frame-confs (frame)
   (setq elscreen-frame-confs (assq-delete-all frame elscreen-frame-confs)))
 
-(add-hook 'after-make-frame-functions 'elscreen-make-frame-confs)
-(add-hook 'delete-frame-functions 'elscreen-delete-frame-confs)
-
 (defsubst elscreen-get-conf-list (type)
   (cdr (assq type (elscreen-get-frame-confs (selected-frame)))))
 
@@ -576,36 +572,32 @@ from `elscreen-frame-confs', a cons cell."
     (when (eq mode 'force-immediately)
       (elscreen-run-screen-update-hook))))
 
+(defun elscreen-notify-screen-modification-force (&rest _)
+  (elscreen-notify-screen-modification 'force))
+
 (defmacro elscreen-screen-modified-hook-setup (&rest hooks-and-functions)
   (cons
    'progn
    (mapcar
     (lambda (hook-or-function)
-      (let ((mode ''normal))
+      (let ((func 'elscreen-notify-screen-modification))
         (when (listp hook-or-function)
-          (setq mode (nth 1 hook-or-function))
+          (setq func (intern (mapconcat #'symbol-name
+                                        (list func
+                                              (nth 1 (nth 1 hook-or-function)))
+                                        "-")))
           (setq hook-or-function (nth 0 hook-or-function)))
         (cond
          ((string-match "-\\(hooks?\\|functions\\)$"
                         (symbol-name hook-or-function))
-          `(add-hook (quote ,hook-or-function)
-                     (lambda (&rest _)
-                       (elscreen-notify-screen-modification ,mode))))
+          `(add-hook (quote ,hook-or-function) (quote, func)))
          (t ;; Assume hook-or-function is function
           `(defadvice ,hook-or-function (around
                                          elscreen-screen-modified-advice
                                          activate)
              ad-do-it
-             (elscreen-notify-screen-modification ,mode))))))
+             (,func))))))
     hooks-and-functions)))
-
-(elscreen-screen-modified-hook-setup
- (recenter 'force) (change-major-mode-hook 'force)
- other-window
- window-configuration-change-hook window-size-change-functions
- (handle-switch-frame 'force) ;; GNU Emacs 21
- (delete-frame 'force)
- (Info-find-node-2 'force))
 
 (defun elscreen-get-screen-to-name-alist-cache ()
   (elscreen-get-conf-list 'screen-to-name-alist-cache))
@@ -625,7 +617,6 @@ from `elscreen-frame-confs', a cons cell."
   (add-to-list 'elscreen-mode-to-nickname-alist-symbol-list
                mode-to-nickname-alist-symbol)
   (elscreen-rebuild-mode-to-nickname-alist))
-(elscreen-set-mode-to-nickname-alist 'elscreen-mode-to-nickname-alist)
 
 (defvar elscreen-buffer-to-nickname-alist-symbol-list nil)
 (defvar elscreen-buffer-to-nickname-alist-internal nil)
@@ -639,7 +630,6 @@ from `elscreen-frame-confs', a cons cell."
   (add-to-list 'elscreen-buffer-to-nickname-alist-symbol-list
                buffer-to-nickname-alist-symbol)
   (elscreen-rebuild-buffer-to-nickname-alist))
-(elscreen-set-buffer-to-nickname-alist 'elscreen-buffer-to-nickname-alist)
 
 (defsubst elscreen-get-alist-to-nickname (alist op mode-or-buffer-name)
   (catch 'found
@@ -1070,7 +1060,6 @@ is ommitted, current screen will survive."
 (defvar elscreen-help-symbol-list nil)
 (defun elscreen-set-help (help-symbol)
   (add-to-list 'elscreen-help-symbol-list help-symbol t))
-(elscreen-set-help 'elscreen-help)
 
 (defun elscreen-help ()
   "Show key bindings of ElScreen and Add-On softwares."
@@ -1283,19 +1272,7 @@ Use \\[toggle-read-only] to permit editing."
   (when (elscreen-screen-modified-p 'elscreen-mode-line-update)
     (force-mode-line-update)))
 
-(let ((point (memq 'mode-line-position mode-line-format))
-      (elscreen-mode-line-elm
-       '(elscreen-display-screen-number
-         (:eval (format " [%d]" (elscreen-get-current-screen))))))
-  (when (null (member elscreen-mode-line-elm mode-line-format))
-    (setcdr point (cons elscreen-mode-line-elm (cdr point)))))
-
-(add-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
-
 ;;;; Menu
-
-(define-key-after (lookup-key global-map [menu-bar]) [elscreen]
-  (cons "ElScreen" (make-sparse-keymap "ElScreen")) 'buffer)
 
 (defvar elscreen-menu-bar-command-entries
   (list (list 'elscreen-command-separator
@@ -1357,6 +1334,7 @@ Use \\[toggle-read-only] to permit editing."
               :help "Display tab on the top of screen"
               :button '(:toggle . elscreen-display-tab))))
 
+(defvar elscreen-menu-map (make-sparse-keymap "ElScreen"))
 (defun elscreen-menu-bar-update (&optional force)
   (when (and (lookup-key (current-global-map) [menu-bar elscreen])
              (or force
@@ -1382,10 +1360,7 @@ Use \\[toggle-read-only] to permit editing."
             (nconc elscreen-menu elscreen-menu-bar-command-entries))
       (setq elscreen-menu
             (cons 'keymap (cons "Select Screen" elscreen-menu)))
-      (define-key (current-global-map) [menu-bar elscreen]
-        (cons (copy-sequence "ElScreen") elscreen-menu)))))
-
-(add-hook 'elscreen-screen-update-hook 'elscreen-menu-bar-update)
+      (setcdr elscreen-menu-map (cons "ElScreen" elscreen-menu)))))
 
 ;;;; Tab
 
@@ -1540,8 +1515,6 @@ Use \\[toggle-read-only] to permit editing."
 
           (setq header-line-format elscreen-tab-format))))))
 
-(add-hook 'elscreen-screen-update-hook 'elscreen-tab-update)
-
 ;;; Unsupported Functions...
 
 (defun elscreen-link ()
@@ -1574,16 +1547,109 @@ Use \\[toggle-read-only] to permit editing."
 
 ;;; Start ElScreen!
 
-;;;###autoload
-(defun elscreen-start ()
-  (interactive)
+(defun elscreen-setup ()
+  (add-hook 'after-make-frame-functions 'elscreen-make-frame-confs)
+  (add-hook 'delete-frame-functions 'elscreen-delete-frame-confs)
+
+  (add-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
+  (add-hook 'elscreen-screen-update-hook 'elscreen-menu-bar-update)
+  (add-hook 'elscreen-screen-update-hook 'elscreen-tab-update)
+
+  ;; Unbind `elscreen-prefix-key' in the minibuffer.
+  (add-hook 'minibuffer-setup-hook 'elscreen-mode-map-disable)
+  (add-hook 'minibuffer-exit-hook 'elscreen-mode-map-enable)
+
+  (elscreen-screen-modified-hook-setup
+   (recenter 'force)
+   (change-major-mode-hook 'force)
+   other-window
+   window-configuration-change-hook
+   window-size-change-functions
+   (handle-switch-frame 'force)
+   (delete-frame 'force)
+   (Info-find-node-2 'force))
+
+  (elscreen-set-mode-to-nickname-alist 'elscreen-mode-to-nickname-alist)
+  (elscreen-set-buffer-to-nickname-alist 'elscreen-buffer-to-nickname-alist)
+
+  (elscreen-set-help 'elscreen-help)
+
+  ;; Setup mode line
+  (let ((point (memq 'mode-line-position mode-line-format)))
+    (unless (eq (car (cadr point)) 'elscreen-display-screen-number)
+      (setcdr point
+              (cons '(elscreen-display-screen-number
+                      (:eval (format " [%d]" (elscreen-get-current-screen))))
+                    (cdr point)))))
+
+  ;; Setup menu bar
+  (define-key-after (lookup-key global-map [menu-bar]) [elscreen]
+    (cons "ElScreen" elscreen-menu-map) 'buffer)
+  ;; Hide "ElScreen" from the menu bar when the minibuffer is active.
+  (define-key minibuffer-local-map [menu-bar elscreen] 'undefined)
+
   (mapc
    (lambda (frame)
      (elscreen-make-frame-confs frame 'keep))
+   (frame-list)))
+
+(defun elscreen-teardown ()
+  (remove-hook 'after-make-frame-functions 'elscreen-make-frame-confs)
+  (remove-hook 'delete-frame-functions 'elscreen-delete-frame-confs)
+
+  (remove-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
+  (remove-hook 'elscreen-screen-update-hook 'elscreen-menu-bar-update)
+  (remove-hook 'elscreen-screen-update-hook 'elscreen-tab-update)
+
+  (remove-hook 'minibuffer-setup-hook 'elscreen-mode-map-disable)
+  (remove-hook 'minibuffer-exit-hook 'elscreen-mode-map-enable)
+
+  ;; Clean up hooks and advices of elscreen-screen-modified-hook-setup
+  (remove-hook 'change-major-mode-hook
+               'elscreen-notify-screen-modification-force)
+  (remove-hook 'window-configuration-change-hook
+               'elscreen-notify-screen-modification)
+  (remove-hook 'window-size-change-functions
+               'elscreen-notify-screen-modification)
+  (dolist (func '(recenter other-window handle-switch-frame delete-frame
+                           Info-find-node-2))
+    (ad-remove-advice func 'around 'elscreen-screen-modified-advice)
+    (ad-update func))
+
+  (setq elscreen-help-symbol-list
+        (delq 'elscreen-help elscreen-help-symbol-list))
+
+  ;; Clean up mode line
+  (let ((point (memq 'mode-line-position mode-line-format)))
+    (when (eq (car (cadr point)) 'elscreen-display-screen-number)
+      (setcdr point (cddr point))))
+
+  (define-key global-map [menu-bar elscreen] nil)
+  (define-key minibuffer-local-map [menu-bar elscreen] nil)
+
+  (mapc
+   (lambda (frame)
+     (elscreen-delete-frame-confs frame))
    (frame-list))
-  (let ((prefix-key elscreen-prefix-key)
-        (elscreen-prefix-key nil))
-    (elscreen-set-prefix-key prefix-key)))
+
+  (setq elscreen-mode-to-nickname-alist-symbol-list nil)
+  (setq elscreen-mode-to-nickname-alist-internal nil)
+  (setq elscreen-buffer-to-nickname-alist-symbol-list nil)
+  (setq elscreen-buffer-to-nickname-alist-internal nil))
+
+;;;###autoload
+(define-minor-mode elscreen-mode nil
+  :group 'elscreen
+  :global t
+  :keymap (list (cons elscreen-prefix-key elscreen-map))
+  (if elscreen-mode
+      (elscreen-setup)
+    (elscreen-teardown)))
+
+;;;###autoload
+(defun elscreen-start ()
+  (interactive)
+  (elscreen-mode 1))
 
 (provide 'elscreen)
 ;; Local Variables:

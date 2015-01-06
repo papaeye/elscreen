@@ -1498,7 +1498,7 @@ Use \\[toggle-read-only] to permit editing."
                                                   (elscreen-goto ,screen))))
                          (when (eq elscreen-tab-display-kill-screen 'right)
                            (concat half-space kill-screen)))
-                        'face (if (eq current-screen screen)
+                        'face (if (= current-screen screen)
                                   'elscreen-tab-current-screen-face
                                 'elscreen-tab-other-screen-face))
                        tab-separator)))))

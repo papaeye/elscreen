@@ -1031,6 +1031,9 @@ is ommitted, current screen will survive."
    ((elscreen-one-screen-p)
     (elscreen-message "There is only one screen, cannot swap"))
    (t
+    (elscreen-set-window-configuration
+     (elscreen-get-current-screen)
+     (elscreen-current-window-configuration))
     (let* ((current-screen (elscreen-get-current-screen))
            (previous-screen (elscreen-get-previous-screen))
            (current-screen-property

@@ -944,6 +944,10 @@ is ommitted, current screen will survive."
      ((or
        (not (called-interactively-p 'any))
        (yes-or-no-p (format "Really kill screens other than %d? " screen)))
+      (when (= screen (elscreen-get-current-screen))
+        (elscreen-set-window-configuration
+         (elscreen-get-current-screen)
+         (elscreen-current-window-configuration)))
       (setq screen-list-string (mapconcat
                                 (lambda (screen)
                                   (elscreen-kill-internal screen)

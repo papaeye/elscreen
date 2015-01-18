@@ -903,6 +903,10 @@ ommitted, current-screen is killed."
       (elscreen-message "There is only one screen, cannot kill")
       nil)
      (t
+      (when (/= screen (elscreen-get-current-screen))
+        (elscreen-set-window-configuration
+         (elscreen-get-current-screen)
+         (elscreen-current-window-configuration)))
       (elscreen-kill-internal screen)
       (elscreen-goto-internal (elscreen-get-current-screen))
       (elscreen-notify-screen-modification 'force)

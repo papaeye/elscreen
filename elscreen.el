@@ -49,7 +49,7 @@
   :group 'environment)
 
 (defcustom elscreen-prefix-key "\C-z"
-  "*Prefix key for ElScreen commands."
+  "Prefix key for ElScreen commands."
   :tag "Prefix Key of ElScreen"
   :type '(string :size 10)
   :set (lambda (symbol value)
@@ -59,19 +59,19 @@
   :group 'elscreen)
 
 (defcustom elscreen-default-buffer-name "*scratch*"
-  "*Name of a buffer in new screen."
+  "Name of a buffer in new screen."
   :tag "Name of Default Buffer"
   :type '(string :size 24)
   :group 'elscreen)
 
 (defcustom elscreen-default-buffer-initial-major-mode initial-major-mode
-  "*Major mode command symbol to use for the default buffer."
+  "Major mode command symbol to use for the default buffer."
   :tag "Major Mode for Default Buffer"
   :type 'function
   :group 'elscreen)
 
 (defcustom elscreen-default-buffer-initial-message initial-scratch-message
-  "*Initial message displayed in default buffer.
+  "Initial message displayed in default buffer.
 If this is nil, no message will be displayed."
   :tag "Message to Display in the Default Buffer"
   :type '(choice (text :tag "Message")
@@ -92,7 +92,7 @@ If this is nil, no message will be displayed."
     ("^irchat-" . "IRChat")
     ("^liece-" . "Liece")
     ("^lookup-" . "Lookup"))
-  "*Alist composed of the pair of name of major-mode and corresponding screen-name."
+  "Alist composed of the pair of name of major-mode and corresponding screen-name."
   :tag "Alist to Derive Screen Names from Major Modes"
   :type '(alist :key-type string :value-type (choice string function))
   :set (lambda (symbol value)
@@ -107,7 +107,7 @@ If this is nil, no message will be displayed."
     ("-telnet" . "telnet")
     ("dict" . "OnlineDict")
     ("*WL:Message*" . "Wanderlust"))
-  "*Alist composed of the pair of regular expression of
+  "Alist composed of the pair of regular expression of
 buffer-name and corresponding screen-name."
   :tag "Alist to Derive Screen Names from Major Modes"
   :type '(alist :key-type string :value-type (choice string function))
@@ -118,13 +118,13 @@ buffer-name and corresponding screen-name."
   :group 'elscreen)
 
 (defcustom elscreen-display-screen-number t
-  "*Non-nil to display the number of current screen in the mode line."
+  "Non-nil to display the number of current screen in the mode line."
   :tag "Show/Hide Screen Number on the mode-line"
   :type 'boolean
   :group 'elscreen)
 
 (defcustom elscreen-display-tab t
-  "*Specify how the tabs at the top of frame should be displayed.
+  "Specify how the tabs at the top of frame should be displayed.
 t means to display tabs whose width should be calculated automatically.
 A value of integer means to display tabs with fixed width of this value.
 nil means don't display tabs."
@@ -144,7 +144,7 @@ nil means don't display tabs."
 (make-obsolete-variable 'elscreen-tab-display-create-screen
                         'elscreen-tab-display-control "2012-04-11")
 (defcustom elscreen-tab-display-control t
-  "*Non-nil to display control tab at the most left side."
+  "Non-nil to display control tab at the most left side."
   :tag "Show/Hide the Control Tab"
   :type 'boolean
   :set (lambda (symbol value)
@@ -154,7 +154,7 @@ nil means don't display tabs."
   :group 'elscreen)
 
 (defcustom elscreen-tab-display-kill-screen 'left
-  "*Location of the icons to kill a screen on each tab.  Possible values are 'left, 'right, or nil (to hide them)."
+  "Location of the icons to kill a screen on each tab.  Possible values are 'left, 'right, or nil (to hide them)."
   :tag "Location of Buttons to Kill Screen on Each Tab"
   :type '(choice (const :tag "Left" left)
                  (const :tag "Right" right)
@@ -163,6 +163,21 @@ nil means don't display tabs."
          (custom-set-default symbol value)
          (when (fboundp 'elscreen-tab-update)
            (elscreen-tab-update t)))
+  :group 'elscreen)
+
+(defcustom elscreen-create-hook nil
+  "Normal hook run at end of creating a screen."
+  :type 'hook
+  :group 'elscreen)
+
+(defcustom elscreen-kill-hook nil
+  "Normal hook run at end of killing a screen."
+  :type 'hook
+  :group 'elscreen)
+
+(defcustom elscreen-goto-hook nil
+  "Normal hook run at end of switching a screen."
+  :type 'hook
   :group 'elscreen)
 
 (defface elscreen-tab-background-face
@@ -352,21 +367,6 @@ Return the modified ALIST."
     (when (marker-buffer marker)
       (goto-char marker))))
 
-(defsubst elscreen-copy-tree (tree)
-  (if (fboundp 'copy-tree)
-      (copy-tree tree)
-    (elscreen-copy-tree-1 tree)))
-
-(defun elscreen-copy-tree-1 (tree)
-  (let (clone)
-    (while (consp tree)
-      (setq clone (cons (or (and (consp (car tree))
-                                 (elscreen-copy-tree-1 (car tree)))
-                            (car tree))
-                        clone))
-      (setq tree (cdr tree)))
-    (nconc (nreverse clone) tree)))
-
 (defun elscreen-window-history-supported-p ()
   (and (fboundp 'window-prev-buffers)
        (fboundp 'window-next-buffers)
@@ -400,7 +400,7 @@ Return the value of the last form in BODY."
          (original-buffer-live-p nil)
          (original-elscreen-window-configuration
           (elscreen-current-window-configuration))
-         (original-frame-confs (elscreen-copy-tree elscreen-frame-confs))
+         (original-frame-confs (copy-tree elscreen-frame-confs))
          (original-window-histories (elscreen-get-all-window-history-alist)))
      (unwind-protect
          (save-window-excursion ,@body)
@@ -753,7 +753,6 @@ stored as SCREEN."
          (elscreen-get-window-configuration screen)))
     (elscreen-apply-window-configuration elscreen-window-configuration)))
 
-(defvar elscreen-create-hook nil)
 (defun elscreen-create-internal (&optional noerror)
   "Create a new screen.
 If NOERROR is not nil, no message is displayed in mini buffer
@@ -888,7 +887,6 @@ If SCREEN is ommitted, current-screen is used."
       (elscreen-set-window-configuration clone elscreen-window-configuration)
       (elscreen-goto clone)))))
 
-(defvar elscreen-kill-hook nil)
 (defun elscreen-kill (&optional screen)
   "Kill SCREEN.  If optional argument SCREEN is
 ommitted, current-screen is killed."
@@ -963,7 +961,6 @@ is ommitted, current screen will survive."
         (elscreen-message (format "screen %s killed" screen-list-string)))))
     screen-list))
 
-(defvar elscreen-goto-hook nil)
 (defun elscreen-goto (screen)
   "Switch to screen SCREEN."
   (interactive "NGoto screen number: ")
@@ -1310,7 +1307,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (add-hook 'elscreen-screen-update-hook 'elscreen-mode-line-update)
 
-;; Menu
+;;;; Menu
 
 (define-key-after (lookup-key global-map [menu-bar]) [elscreen]
   (cons "ElScreen" (make-sparse-keymap "ElScreen")) 'buffer)
@@ -1405,7 +1402,7 @@ Use \\[toggle-read-only] to permit editing."
 
 (add-hook 'elscreen-screen-update-hook 'elscreen-menu-bar-update)
 
-;; Tab
+;;;; Tab
 
 (defvar elscreen-tab-format nil)
 (make-variable-buffer-local 'elscreen-tab-format)

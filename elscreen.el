@@ -1356,7 +1356,7 @@ Use \\[toggle-read-only] to permit editing."
               "Toggle Screen"
               'elscreen-toggle
               :help "Toggle to the screen selected previously")
-        (list 'elscreen-command-separator
+        (list 'elscreen-command-separator-toggle
               'menu-item
               "--")
         (list 'elscreen-toggle-display-screen-number
